@@ -1,0 +1,31 @@
+Source: libstringprep-java
+Section: java
+Priority: optional
+Maintainer: Debian Java Maintainers <pkg-java-maintainers@lists.alioth.debian.org>
+Uploaders:
+ Christoph Berg <myon@debian.org>,
+Build-Depends:
+ debhelper-compat (= 13),
+ default-jdk,
+ junit4,
+ libbuild-helper-maven-plugin-java,
+ libmaven-exec-plugin-java,
+ libmaven-javadoc-plugin-java,
+ libmaven-source-plugin-java,
+ maven-debian-helper (>= 2.1),
+Build-Depends-Indep:
+ default-jdk-doc,
+Standards-Version: 4.5.0
+Vcs-Git: https://salsa.debian.org/java-team/libstringprep-java.git
+Vcs-Browser: https://salsa.debian.org/java-team/libstringprep-java
+Homepage: https://gitlab.com/ongresinc/stringprep
+
+Package: libstringprep-java
+Architecture: all
+Multi-Arch: foreign
+Depends:
+ ${maven:Depends},
+ ${misc:Depends},
+Description: Stringprep (RFC 3454) Java implementation
+ This project implements the RFC 3454 Preparation of Internationalized Strings
+ ("stringprep") in pure Java.

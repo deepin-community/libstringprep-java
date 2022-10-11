@@ -1,0 +1,8 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_test:
+	# disabled for now
+	# [ERROR] Failed to execute goal org.codehaus.mojo:exec-maven-plugin:1.6.0:java (generate-stringprep) on project stringprep: An exception occured while executing the Java class. The directory couldn't be created -> [Help 1]

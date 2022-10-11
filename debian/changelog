@@ -1,0 +1,12 @@
+libstringprep-java (1.1-2) unstable; urgency=medium
+
+  * Source-only upload.
+
+ -- Christoph Berg <myon@debian.org>  Mon, 16 Aug 2021 11:41:43 +0200
+
+libstringprep-java (1.1-1) unstable; urgency=medium
+
+  * Initial release.
+  * Required by libscram-java 2.x which needs version 1.x of this package.
+
+ -- Christoph Berg <myon@debian.org>  Fri, 23 Apr 2021 17:16:18 +0200
