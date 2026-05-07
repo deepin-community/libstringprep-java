@@ -1,19 +1,111 @@
-image: openjdk:11-stretch
+image: eclipse-temurin:21
+
+variables:
+  # This will suppress any download for dependencies and plugins or upload messages which would clutter the console log.
+  # `showDateTime` will show the passed time in milliseconds. You need to specify `--batch-mode` to make this work.
+  MAVEN_OPTS: |
+    -Dhttps.protocols=TLSv1.3,TLSv1.2
+    -Djdk.tls.client.protocols=TLSv1.3,TLSv1.2
+    -Dorg.slf4j.simpleLogger.showDateTime=true
+    -Djava.awt.headless=true
+    -Xss4m
+  MAVEN_CLI_OPTS: |
+    --batch-mode
+    --strict-checksums
+    --errors
+    --show-version
+    --no-transfer-progress
+    -DinstallAtEnd=true
+    -DdeployAtEnd=true
+    -Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository
+    -Dmaven.user.home=$CI_PROJECT_DIR/.m2
+
+# Cache downloaded dependencies and plugins between builds.
+# To keep cache across branches add 'key: "$CI_JOB_NAME"'
+cache: &global_cache
+  key:
+    files:
+      - pom.xml
+  paths:
+    - .m2
+    - .mvn
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH && $CI_OPEN_MERGE_REQUESTS'
+      when: never
+    - if: '$CI_COMMIT_BRANCH'
 
 stages:
   - build
-
-cache:
-  paths:
-    - .m2/
-
-variables:
-  M2_HOME: ".m2/maven"
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2"
-  GITLAB_BASE_URL: "https://gitlab.com"
+  - test
+  - check
 
 build:
   stage: build
   script:
-    - bash mvnw clean verify -P safer
+    - ./mvnw $MAVEN_CLI_OPTS package -P codegen -DskipTests
+  artifacts:
+    paths:
+      - "*/target/"
 
+tests:
+  stage: test
+  needs:
+    - job: build
+      artifacts: true
+  parallel:
+    matrix:
+      - JDK_IMAGE:
+        - azul/zulu-openjdk:8
+        - azul/zulu-openjdk:11
+        - azul/zulu-openjdk:17
+        - azul/zulu-openjdk:21
+        - azul/zulu-openjdk:22
+        - openjdk:23-ea-oraclelinux9
+  image: $JDK_IMAGE
+  script:
+    - ./mvnw $MAVEN_CLI_OPTS verify -Denforcer.skip=true
+  cache:
+    # inherit all global cache settings
+    <<: *global_cache
+    policy: pull
+  artifacts:
+    reports:
+      junit:
+        - "*/target/surefire-reports/TEST-*.xml"
+        - "**/target/junit-platform/TEST-*.xml"
+
+sonarcloud-check:
+  stage: check
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+  variables:
+    GIT_STRATEGY: clone
+    GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+    SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
+  script:
+    - |
+      ./mvnw $MAVEN_CLI_OPTS verify sonar:sonar \
+      -Dsonar.qualitygate.wait=true -Dsonar.organization=ongresinc \
+      -Dsonar.coverage.jacoco.xmlReportPaths="${CI_PROJECT_DIR}/coverage-report/target/site/jacoco-aggregate/jacoco.xml" \
+      -P coverage
+  only:
+    - merge_requests
+    - develop
+    - main
+
+static-checks:
+  stage: check
+  needs:
+    - job: build
+      artifacts: true
+  script:
+    - ./mvnw $MAVEN_CLI_OPTS verify -P checks -DskipTests
+  cache:
+    # inherit all global cache settings
+    <<: *global_cache
+    policy: pull
