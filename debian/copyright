@@ -8,7 +8,8 @@ Copyright:
 License: 2-clause-BSD
 
 Files: debian/*
-Copyright: 2021, Christoph Berg <myon@debian.org>
+Copyright: 2021-2022, Christoph Berg <myon@debian.org>
+           2022, tony mancill <tmancill@debian.org>
 License: 2-clause-BSD
 
 License: 2-clause-BSD

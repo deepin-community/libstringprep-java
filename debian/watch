@@ -1,3 +1,3 @@
 version=4
-options="uversionmangle=s/.beta/~beta/" \
-https://gitlab.com/ongresinc/stringprep/-/tags .*/stringprep-(.*)\.tar\.gz
+options="searchmode=plain, uversionmangle=s/.beta/~beta/" \
+https://gitlab.com/ongresinc/stringprep/tags?sort=updated_desc -/archive/[\d.]+/stringprep-@ANY_VERSION@@ARCHIVE_EXT@
